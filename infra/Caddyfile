@@ -1,0 +1,18 @@
+{
+    auto_https off
+    log {
+        level INFO
+        output stdout
+        format console
+    }
+}
+
+
+http://*.localhost:8080 {    
+    rewrite * /public-web-apps/{labels.1}{uri}
+    reverse_proxy http://minio:9000
+}
+
+http://localhost:8080 {
+    respond "Please use a subdomain: <subdomain>.localhost:8080"
+}

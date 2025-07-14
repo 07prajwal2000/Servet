@@ -1,0 +1,8 @@
+agent
+node_modules
+.vscode
+grafana
+minio
+pgdata
+.env
+package-lock.json

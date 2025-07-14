@@ -1,0 +1,120 @@
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true" # This enables KRaft mode in Kafka.
+      KAFKA_PROCESS_ROLES: controller,broker # Kafka acts as both broker and controller.
+      KAFKA_NODE_ID: 1 # A unique ID for this Kafka instance.
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@192.168.1.184:9093" # Defines the controller voters.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.184:9092
+      KAFKA_LOG_DIRS: /var/lib/kafka/data # Where Kafka stores its logs.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Kafka will automatically create topics if needed.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # Since we’re running one broker, one replica is enough.
+      KAFKA_LOG_RETENTION_HOURS: 24 # Keep logs for 7 days.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # No delay for consumer rebalancing.
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk" # A unique ID for the Kafka cluster.
+    networks:
+      - kafka-net
+    cpus: .5
+    mem_limit: 1G
+  minio:
+    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - "MINIO_ROOT_USER=admin"
+      - "MINIO_ROOT_PASSWORD=12345678"
+    command: 'server /data --console-address ":9001"'
+    volumes:
+      - "./minio:/data"
+    networks:
+      - cdn
+    cpus: .25
+    mem_limit: 250m
+  caddy:
+    image: caddy
+    container_name: caddy
+    ports:
+      - 8080:8080
+    networks:
+      - cdn
+    volumes:
+      - "./Caddyfile:/etc/caddy/Caddyfile"
+  postgres:
+    container_name: postgres
+    image: postgres:bullseye
+    volumes:
+      - "./pgdata:/var/pgdata"
+    ports:
+      - 5432:5432
+    environment:
+      - PGDATA=/var/pgdata
+      - POSTGRES_PASSWORD=12345
+    networks:
+      - postgres-net
+    cpus: .5
+    mem_limit: 512m
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - redis-net
+    cpus: .25
+    mem_limit: 512m
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - "./grafana:/var/lib/grafana"
+    ports:
+      - 3001:3000
+    cpus: .25
+    mem_limit: 250m
+    networks:
+      - monitoring
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    volumes:
+      - clickhouse:/var/lib/clickhouse
+    ports:
+      - 8123:8123
+      - 19000:9000
+    environment:
+      - CLICKHOUSE_SKIP_USER_SETUP=1
+    mem_limit: 1G
+    ulimits:
+      nofile:
+        hard: 262144
+        soft: 252144
+    cpus: .5
+    networks:
+      - monitoring
+
+networks:
+  kafka-net:
+    driver: bridge
+  postgres-net:
+    driver: bridge
+  redis-net:
+    driver: bridge
+  monitoring:
+    driver: bridge
+  cdn:
+    driver: bridge
+
+volumes:
+  clickhouse:
+    external: true
