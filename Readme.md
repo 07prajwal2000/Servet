@@ -17,6 +17,7 @@ Servet (pronounced as Serve-It) is a Vercel/Netlify clone. It is a simple applic
 - Postgres: Main data store
 - Docker: Sandbox compute
 - Minio (S3): Artifact storage
+- Caddy Server: Acts as a reverse proxy and forwards the traffic from browser (manipulates the url) and sends to S3 (minio)
 - Grafana: Logs dashboard
 
 # Building
