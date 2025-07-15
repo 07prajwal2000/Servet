@@ -41,11 +41,18 @@ services:
       - cdn
     cpus: .25
     mem_limit: 250m
+  varnish_cdn:
+    image: varnish:stable
+    container_name: varnish_cdn
+    volumes:
+      - "./varnish.vcl:/etc/varnish/default.vcl"
+    networks:
+      - cdn
+    ports:
+      - 8080:80
   caddy:
     image: caddy
     container_name: caddy
-    ports:
-      - 8080:8080
     networks:
       - cdn
     volumes:

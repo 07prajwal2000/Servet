@@ -32,7 +32,7 @@ export async function scheduleBuildServer(
 	}
 
 	// generate build id
-	const buildId = hashId.encode(build[0].id);
+	const buildId = build[0].id;
 
 	// send to kafka topic
 	const nodeTopic = process.env.KAFKA_NODE_TOPIC!;
